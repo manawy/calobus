@@ -9,7 +9,9 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/adc.h>
 
-#include <zephyr/drivers/i2c.h>
+//#include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/sensor.h>
+
 
 // --- Logging ---
 LOG_MODULE_REGISTER(sensor_thread, LOG_LEVEL_INF);
@@ -30,16 +32,10 @@ ZBUS_CHAN_DEFINE(sensor_data_chan,
 static const struct adc_dt_spec fluxsensor =
     ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 0);
 
-static const struct i2c_dt_spec i2cbus = {I2C_DT_SPEC_GET_ON_I2C(DT_ALIAS(fluxsensor))};
-
 // --- Sensors -----
 
 static int adc_init(struct adc_sequence* sequence) {
 
-    if (!i2c_is_ready_dt(&i2cbus)) {
-        LOG_ERR("ADC controller device not ready");
-        return -1;
-    }
     if (!adc_is_ready_dt(&fluxsensor)) {
         LOG_ERR("ADC controller device not ready");
         return -1;
@@ -51,6 +47,14 @@ static int adc_init(struct adc_sequence* sequence) {
         return err;
     }
     LOG_INF("ADC: initialized");
+    return 0;
+}
+
+static int boardt_init(const struct device* const tdev) {
+    if (!device_is_ready(tdev)) {
+        LOG_ERR("Board temperature sensor not ready");
+        return -1;
+    }
     return 0;
 }
 
@@ -83,6 +87,10 @@ static bool adc_measure_heat(struct adc_sequence* sequence, int32_t* value) {
 // --- Thread definition
 
 void sensor_thread() {
+
+    const struct device *const tboard = DEVICE_DT_GET(DT_ALIAS(boardt));
+    boardt_init(tboard);
+
     const struct zbus_channel* chan;
     struct sensor_data_msg sdata = {.uv = 0, .ok=false};
  
@@ -99,6 +107,19 @@ void sensor_thread() {
 
     while(1) {
         zbus_sub_wait(&sensor_thread_sub, &chan, K_FOREVER);
+
+        LOG_PRINTK("Start reading");
+        struct sensor_value temp;
+        int ret = sensor_sample_fetch(tboard);
+        if (ret !=0) {
+            LOG_ERR("Failed reading board temperature");
+            sdata.temp = 0;
+        } else {
+            sensor_channel_get(tboard, SENSOR_CHAN_AMBIENT_TEMP, &temp);
+            sdata.temp = sensor_value_to_float(&temp);
+        }
+        LOG_PRINTK("Temperature read");
+
         //bool ok = false;
         bool ok = adc_measure_heat(&sequence, &sdata.uv);
         LOG_PRINTK("data: %d", sdata.uv);

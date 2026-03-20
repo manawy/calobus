@@ -37,6 +37,7 @@ void processing_thread() {
             processed_data.value = msg.uv;
         }
         processed_data.to_save = msg.ok;
+        LOG_PRINTK("Board temperature: %f\n", (double) msg.temp);
 
         zbus_chan_pub(&processing_thread_chan, &processed_data, K_MSEC(100));
     }

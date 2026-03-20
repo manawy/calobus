@@ -7,6 +7,7 @@
 // The zbus message containing the raw data
 struct sensor_data_msg {
     int32_t uv;
+    float temp;
     bool ok;
 };
 
