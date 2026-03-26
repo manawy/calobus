@@ -2,4 +2,4 @@
 
 zephyr_library()
 
-zephyr_library_sources(ads1115.c)
+zephyr_library_sources(ads1115sensor.c)

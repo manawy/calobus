@@ -79,7 +79,7 @@
         };
     }; */
     ads1115: ads1115@48 {
-        compatible = "custom,ads1115sensor";
+        compatible = "ti,ads1115sensor";
         reg = <0x48>;
         status = "okay";
     };

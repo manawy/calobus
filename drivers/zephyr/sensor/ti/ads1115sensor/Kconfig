@@ -6,9 +6,9 @@
 menu "custom device drivers"
 
 menuconfig ADS1115SENSOR
-	bool "ADS1115 Differential voltate Sensor"
+	bool "ADS1115 Differential voltage Sensor"
 	default y
-	depends on DT_HAS_CUSTOM_ADS1115_ENABLED
+	depends on DT_HAS_TI_ADS1115SENSOR_ENABLED
 	select I2C
 	help
 	  Enable driver for ADS1115 voltage sensor (custom)

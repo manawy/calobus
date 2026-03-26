@@ -29,8 +29,10 @@ ZBUS_CHAN_DEFINE(sensor_data_chan,
                  );
 
 // --- Device tree -----------
+#ifdef CONFIG_DT_HAS_TI_ADS1115_ENABLED
 static const struct adc_dt_spec fluxsensor =
     ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 0);
+
 
 // --- Sensors -----
 
@@ -49,6 +51,19 @@ static int adc_init(struct adc_sequence* sequence) {
     LOG_INF("ADC: initialized");
     return 0;
 }
+#elif defined CONFIG_DT_HAS_TI_ADS1115SENSOR_ENABLED
+static const struct device *fluxsensor = DEVICE_DT_GET(DT_ALIAS(fluxsensor));
+
+
+static int adc_init(const struct device* dev) {
+    if (!device_is_ready(dev)) {
+        LOG_ERR_DEVICE_NOT_READY(dev);
+        return -1;
+    }
+    return 0;
+}
+#endif
+
 
 static int boardt_init(const struct device* const tdev) {
     if (!device_is_ready(tdev)) {
@@ -58,6 +73,7 @@ static int boardt_init(const struct device* const tdev) {
     return 0;
 }
 
+#ifdef CONFIG_DT_HAS_TI_ADS1115_ENABLED
 struct k_poll_signal signal = K_POLL_SIGNAL_INITIALIZER(signal);
 struct k_poll_event event = K_POLL_EVENT_STATIC_INITIALIZER(
                                 K_POLL_TYPE_SIGNAL,
@@ -83,6 +99,7 @@ static bool adc_measure_heat(struct adc_sequence* sequence, int32_t* value) {
         return false;
     }
 }
+#endif
 
 // --- Thread definition
 
@@ -92,9 +109,9 @@ void sensor_thread() {
     boardt_init(tboard);
 
     const struct zbus_channel* chan;
-    struct sensor_data_msg sdata = {.uv = 0, .ok=false};
+    struct sensor_data_msg sdata = {.ok=false};
  
-
+    #ifdef CONFIG_DT_HAS_TI_ADS1115_ENABLED
     uint16_t buffer;
     struct adc_sequence sequence;
     sequence.buffer = &buffer;
@@ -104,27 +121,36 @@ void sensor_thread() {
         k_sleep(K_SECONDS(1));
         adc_init(&sequence);
     }
+    #elif defined CONFIG_DT_HAS_TI_ADS1115SENSOR_ENABLED
+    struct sensor_value sens_val;
+    adc_init(fluxsensor);
+
+    #endif
 
     while(1) {
         zbus_sub_wait(&sensor_thread_sub, &chan, K_FOREVER);
 
-        LOG_PRINTK("Start reading");
         struct sensor_value temp;
         int ret = sensor_sample_fetch(tboard);
         if (ret !=0) {
             LOG_ERR("Failed reading board temperature");
-            sdata.temp = 0;
         } else {
             sensor_channel_get(tboard, SENSOR_CHAN_AMBIENT_TEMP, &temp);
-            sdata.temp = sensor_value_to_float(&temp);
+            sdata.temp = temp;
         }
-        LOG_PRINTK("Temperature read");
 
+        #ifdef CONFIG_DT_HAS_TI_ADS1115_ENABLED
         //bool ok = false;
         bool ok = adc_measure_heat(&sequence, &sdata.uv);
         LOG_PRINTK("data: %d", sdata.uv);
         LOG_PRINTK("data ok ?: %d\n", sdata.ok);
         sdata.ok = ok;
+        #elif defined CONFIG_DT_HAS_TI_ADS1115SENSOR_ENABLED
+        sensor_sample_fetch(fluxsensor);
+        sensor_channel_get(fluxsensor, SENSOR_CHAN_VOLTAGE, &sens_val);
+        sdata.uv = sens_val;
+        sdata.ok = true;
+        #endif
 
         zbus_chan_pub(&sensor_data_chan, &sdata, K_MSEC(100));
     }

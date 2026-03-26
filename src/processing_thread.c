@@ -1,5 +1,6 @@
 #include "processing_thread.h"
 #include "sensor_thread.h"
+#include "zephyr/drivers/sensor.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/zbus/zbus.h>
@@ -34,10 +35,11 @@ void processing_thread() {
         if (err) {
             LOG_WRN("Could not read data channel. Error code: %d", err);
         } else {
-            processed_data.value = msg.uv;
+            processed_data.value = msg.uv.val1;
         }
         processed_data.to_save = msg.ok;
-        LOG_PRINTK("Board temperature: %f\n", (double) msg.temp);
+        LOG_PRINTK("Board temperature: %f\n",
+                   (double) sensor_value_to_float(&msg.temp));
 
         zbus_chan_pub(&processing_thread_chan, &processed_data, K_MSEC(100));
     }

@@ -5,10 +5,10 @@ description: |
   An test to use ADS1115 in sensor API
 
     ads1115sensor {
-        compatible = "custom,ads1115sensor";
+        compatible = "ti,ads1115sensor";
     };
 
-compatible: "custom.ads1115sensor"
+compatible: "ti,ads1115sensor"
 
 include: [sensor-device.yaml, i2c-device.yaml]
 
