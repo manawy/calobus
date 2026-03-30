@@ -129,7 +129,7 @@ int ads1115sensor_init(const struct device *dev) {
     static struct ads1115sensor_data ads1115sensor_data_##inst;                 \
                                                                                 \
     static const struct ads1115sensor_config ads1115sensor_config_##inst = {    \
-        .i2c = I2C_DT_SPEC_INST_GET(inst),                                     \
+        .i2c = I2C_DT_SPEC_INST_GET(inst),                                      \
         };                                                                      \
                                                                                 \
     SENSOR_DEVICE_DT_INST_DEFINE(inst,                                          \

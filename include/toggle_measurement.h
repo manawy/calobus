@@ -1,5 +1,6 @@
 #pragma once
 
+#include "zephyr/zbus/zbus.h"
 #include <stdbool.h>
 
 /* Start a measurement
@@ -13,3 +14,6 @@ bool start_measurement();
  * Return false if measurement successfully stopped
  */
 bool end_measurement();
+
+ZBUS_CHAN_DECLARE(start_measure_chan);
+ZBUS_CHAN_DECLARE(start_trigger_chan);

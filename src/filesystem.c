@@ -112,29 +112,19 @@ void get_sd_full_path(char *path, const char* filename) {
     return;
 }
 
-
-const struct device *const rtc = DEVICE_DT_GET(DT_ALIAS(rtc));
-
-void get_sd_timed_path(char *path, const char* prefix) {
-    struct rtc_time tm;
-    int ret = rtc_get_time(rtc, &tm);
-    if (ret <0) {
-        LOG_ERR("Cannot get RTC time !");
-    }
-
-
+void get_sd_timed_path(char *path, const char* prefix, struct rtc_time* tm) {
     int lenp = strlen(prefix);
     char buf[128];
     strncpy(buf, prefix, lenp);
 
     snprintfcb(&buf[lenp], 128-lenp, 
                "%02d%02d%02d_%02d%02d%02d",
-                tm.tm_year-100,
-                tm.tm_mon+1,
-                tm.tm_mday,
-                tm.tm_hour,
-                tm.tm_min,
-                tm.tm_sec
+                tm->tm_year-100,
+                tm->tm_mon+1,
+                tm->tm_mday,
+                tm->tm_hour,
+                tm->tm_min,
+                tm->tm_sec
                ); 
    get_sd_full_path(path, buf); 
 }

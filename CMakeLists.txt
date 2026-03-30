@@ -20,5 +20,6 @@ target_sources(app PRIVATE
     src/datalogger_thread.c
     src/leds_interface.c
     src/filesystem.c
+    src/health_check.c
 )
 target_include_directories(app PRIVATE include)

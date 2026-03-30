@@ -4,9 +4,9 @@
 
 
 / {
-    /*zephyr,user {
-        io-channels = <&i2c_adc 0>;
-    };*/
+    zephyr,user {
+   //     io-channels = <&i2c_adc 0>;
+    };
     chosen {
         zephyr,console = &cdc_acm_uart0;
     };
@@ -60,7 +60,8 @@
 &i2c0 {
     status = "okay";
 
-    /*i2c_adc: ads1115@48 {
+    /*
+    i2c_adc: ads1115@48 {
         status = "okay";
         compatible = "ti,ads1115";
         reg = <0x48>;
@@ -77,13 +78,15 @@
             zephyr,input-negative = <3>;
             zephyr,resolution = <16>;
         };
-    }; */
+    };
+    */
+    
     ads1115: ads1115@48 {
         compatible = "ti,ads1115sensor";
         reg = <0x48>;
         status = "okay";
     };
-
+    
     ds3231: ds3231@68 {
         compatible = "maxim,ds3231-mfd";
         reg = <0x68>;
@@ -138,17 +141,23 @@
         pinctrl-names = "default";
 
         sdhcd0: sdhc@0 {
-                compatible = "zephyr,sdhc-spi-slot";
-                reg = <0>;
-                status = "okay";
-                spi-max-frequency = <12500000>;
+            compatible = "zephyr,sdhc-spi-slot";
+            spi-cpol;
+            spi-cpha;
+            spi-clock-mode-cpol;
+            spi-clock-mode-cpha;
+            spi-hold-cs;
+            reg = <0>;
+            status = "okay";
+            spi-max-frequency = <12500000>;
+            spi-cs-hold-delay-ns=<20>;
                 //cd-gpios = <&gpio0 22 GPIO_ACTIVE_HIGH>;
                 //power-delay-ms = <5>;
-                sdmmc {
-                    compatible = "zephyr,sdmmc-disk";
-                    disk-name = "SD";
-                    status = "okay";
-                };
+            sdmmc {
+                compatible = "zephyr,sdmmc-disk";
+                disk-name = "SD";
+                status = "okay";
+            };
         };
 
 };

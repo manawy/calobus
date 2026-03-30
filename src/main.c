@@ -70,13 +70,14 @@ int main() {
         LOG_ERR("Error led init");
     }
 
+    #ifdef CONFIG_SDLOGGING
     LOG_INF("Initializing SD card");
-
     ret = init_sd_card();
     if (ret < 0) {
         LOG_ERR("No SD card");
     }
     LOG_INF("Init SD card done");
+    #endif
 
     struct app_info_msg* app_info = 
         (struct app_info_msg*) zbus_chan_const_msg(&app_info_chan);

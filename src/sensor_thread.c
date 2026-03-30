@@ -66,14 +66,6 @@ static int adc_init(const struct device* dev) {
 #endif
 
 
-static int boardt_init(const struct device* const tdev) {
-    if (!device_is_ready(tdev)) {
-        LOG_ERR("Board temperature sensor not ready");
-        return -1;
-    }
-    return 0;
-}
-
 #ifdef CONFIG_DT_HAS_TI_ADS1115_ENABLED
 struct k_poll_signal signal = K_POLL_SIGNAL_INITIALIZER(signal);
 struct k_poll_event event = K_POLL_EVENT_STATIC_INITIALIZER(
@@ -106,9 +98,6 @@ static bool adc_measure_heat(struct adc_sequence* sequence, int32_t* value) {
 
 void sensor_thread() {
 
-    const struct device *const tboard = DEVICE_DT_GET(DT_ALIAS(boardt));
-    boardt_init(tboard);
-
     const struct zbus_channel* chan;
     struct sensor_data_msg sdata = {.ok=false};
  
@@ -131,21 +120,15 @@ void sensor_thread() {
     while(1) {
         zbus_sub_wait(&sensor_thread_sub, &chan, K_FOREVER);
 
-        struct sensor_value temp;
-        int ret = sensor_sample_fetch(tboard);
-        if (ret !=0) {
-            LOG_ERR("Failed reading board temperature");
-        } else {
-            sensor_channel_get(tboard, SENSOR_CHAN_AMBIENT_TEMP, &temp);
-            sdata.temp = temp;
-        }
 
         #ifdef CONFIG_DT_HAS_TI_ADS1115_ENABLED
         //bool ok = false;
-        bool ok = adc_measure_heat(&sequence, &sdata.uv);
-        LOG_PRINTK("data: %d", sdata.uv);
-        LOG_PRINTK("data ok ?: %d\n", sdata.ok);
+        int32_t value;
+        bool ok = adc_measure_heat(&sequence, &value);
+        //LOG_PRINTK("data: %d", value);
+        //LOG_PRINTK("data ok ?: %d\n", sdata.ok);
         sdata.ok = ok;
+        sdata.uv.val1 = value;
         #elif defined CONFIG_DT_HAS_TI_ADS1115SENSOR_ENABLED
         sensor_sample_fetch(fluxsensor);
         sensor_channel_get(fluxsensor, SENSOR_CHAN_VOLTAGE, &sens_val);
@@ -162,6 +145,6 @@ K_THREAD_DEFINE(sensor_thread_id,
                 sensor_thread,
                 NULL, NULL, NULL,
                 3, 0,
-                1000);
+                CONFIG_HEARTBEAT_MSEC);
 
 

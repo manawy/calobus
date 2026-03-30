@@ -3,6 +3,8 @@
 #define DISK_DRIVE_NAME "SD"
 #define DISK_MOUNT_POINT "/SD:"
 
+struct rtc_time;
+
 // SD Card initialization
 //
 // Check if sd card is in and mount filesystem
@@ -15,4 +17,4 @@ int de_init_sd_card();
 void get_sd_full_path(char *path, const char* filename);
 
 // Return a path with a timed suffix
-void get_sd_timed_path(char *path, const char* prefix);
+void get_sd_timed_path(char *path, const char* prefix, struct rtc_time* tm);
