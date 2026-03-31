@@ -17,3 +17,4 @@ bool end_measurement();
 
 ZBUS_CHAN_DECLARE(start_measure_chan);
 ZBUS_CHAN_DECLARE(start_trigger_chan);
+ZBUS_CHAN_DECLARE(end_measure_chan);

@@ -17,4 +17,8 @@ int de_init_sd_card();
 void get_sd_full_path(char *path, const char* filename);
 
 // Return a path with a timed suffix
-void get_sd_timed_path(char *path, const char* prefix, struct rtc_time* tm);
+void get_sd_timed_path(char *path,
+                       const char* prefix,
+                       struct rtc_time* tm,
+                       const char* suffix
+                      );

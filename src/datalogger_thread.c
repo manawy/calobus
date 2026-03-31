@@ -51,10 +51,13 @@ static int datalog_one() {
     return_code = err;
     LOG_PRINTK("%lld,%d\n", processed_data.timestamp - timestamp_0, processed_data.value);
 
-    #ifdef SDLOGGING
+    #ifdef CONFIG_SDLOGGING
     if (file_is_open) {
-        char buf[126];
-        sprintf(buf, "%"PRId30"\n", processed_data.value);
+        char buf[128];
+        sprintf(buf, "%lld,%"PRId32"\n",
+                processed_data.timestamp-timestamp_0,
+                processed_data.value);
+        fs_write(&file, buf, strlen(buf));
     }
     #endif // CONFIG_SDLOGGING
     return return_code;
@@ -81,18 +84,25 @@ static int datalog_setup() {
     #ifdef CONFIG_SDLOGGING
     fs_file_t_init(&file);
     if (!file_is_open) {
-        char path[126];
-        get_sd_timed_path(path, "measure");
+        char path[128];
+        get_sd_timed_path(path, "m", &tm, ".dat");
 
-        int rc = fs_open(&file, path,
-                FS_O_CREATE | FS_O_WRITE | FS_O_APPEND); 
-        if (rc != -2) {
+        int rc = fs_open(&file, path, FS_O_CREATE | FS_O_RDWR | FS_O_APPEND); 
+        if (rc != 0) {
             LOG_ERR("Failed to open file %s", path);
         } else {
             file_is_open = true;
         }
     }
     #endif
+    return 0;
+}
+
+static int datalog_end() {
+    if (file_is_open) {
+        fs_close(&file);
+        file_is_open = false;
+    }
     return 0;
 }
 
@@ -106,6 +116,8 @@ void datalogger_thread(void) {
             zbus_chan_pub(&end_onebeat_chan, &rc, K_MSEC(98));
         } else if (&start_measure_chan == chan) {
             datalog_setup();
+        } else if (&end_measure_chan == chan) {
+            datalog_end();
         }
     }
 }

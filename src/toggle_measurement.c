@@ -25,6 +25,12 @@ ZBUS_CHAN_DEFINE(start_measure_chan,
                  ZBUS_OBSERVERS(datalogger_thread_sub),
                  0);
 
+ZBUS_CHAN_DEFINE(end_measure_chan,
+                 uint8_t,
+                 NULL, NULL,
+                 ZBUS_OBSERVERS(datalogger_thread_sub),
+                 0);
+
 void run_trigger() {
     LOG_DBG("run trigger");
     zbus_chan_notify(&start_trigger_chan, K_MSEC(100));
@@ -45,6 +51,7 @@ bool start_measurement() {
 bool end_measurement() {
     LOG_PRINTK(" ---- Stop measurement ---- \n");
     k_timer_stop(&heartbeat_timer);
+    zbus_chan_notify(&end_measure_chan, K_MSEC(100));
     return false;
 }
 

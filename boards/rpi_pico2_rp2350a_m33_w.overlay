@@ -16,7 +16,7 @@
         ledbusy = &led1;
         fluxsensor = &i2c_adc;
         btnstart = &button0;
-        boardt = &sht35;
+        boardt = &ds3231_sensor;
         fluxsensor = &ads1115;
     };
     leds {
@@ -107,7 +107,7 @@
     sht35: sht35@44 {
         compatible = "sensirion,sht3xd";
         reg = <0x44>;
-        status = "okay";
+        status = "disabled";
     };
 };
 

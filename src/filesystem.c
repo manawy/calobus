@@ -112,13 +112,17 @@ void get_sd_full_path(char *path, const char* filename) {
     return;
 }
 
-void get_sd_timed_path(char *path, const char* prefix, struct rtc_time* tm) {
+void get_sd_timed_path(char *path,
+                       const char* prefix,
+                       struct rtc_time* tm,
+                       const char* suffix
+                       ) {
     int lenp = strlen(prefix);
     char buf[128];
     strncpy(buf, prefix, lenp);
 
     snprintfcb(&buf[lenp], 128-lenp, 
-               "%02d%02d%02d_%02d%02d%02d",
+               "%02d%02d%02d%02d%02d%02d",
                 tm->tm_year-100,
                 tm->tm_mon+1,
                 tm->tm_mday,
@@ -126,5 +130,6 @@ void get_sd_timed_path(char *path, const char* prefix, struct rtc_time* tm) {
                 tm->tm_min,
                 tm->tm_sec
                ); 
+   strncpy(&buf[strlen(buf)], suffix, strlen(suffix));
    get_sd_full_path(path, buf); 
 }
