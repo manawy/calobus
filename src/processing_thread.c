@@ -27,16 +27,40 @@ ZBUS_CHAN_DEFINE(processing_thread_chan,
                  ZBUS_MSG_INIT(0)
                  );
 
-void processing_thread() {
-    const struct zbus_channel* chan;
+// Process one sample and notify/publish accordingly
+static void process_one(struct sensor_data_msg *msg)
+{
+    static int64_t buffer = 0;
+    static int counter = 0;
+
+    if (msg->ok != true) {
+        zbus_chan_notify(&end_onebeat_chan, K_MSEC(50));
+    }
 
     struct processing_thread_msg processed_data = {.to_save=0, .value=0};
+    buffer += msg->uv.val1;
 
+    if (++counter < CONFIG_OVERSAMPLING) {
+        // nothing to do - wait for nex sample
+        zbus_chan_pub(&end_onebeat_chan, &counter, K_MSEC(50));
+        return;
+    }
+
+    // data is ready to be send to datalogger
+    processed_data.value = buffer/CONFIG_OVERSAMPLING;
+    processed_data.to_save = msg->ok;
+    processed_data.timestamp = k_uptime_get();
+
+    buffer = 0;
+    counter = 0;
+    zbus_chan_pub(&processing_thread_chan, &processed_data, K_MSEC(50));
+    return;
+}
+
+void processing_thread()
+{
+    const struct zbus_channel* chan;
     struct sensor_data_msg msg;
-
-    int32_t buffer = 0;
-    int counter = 0;
-    bool ok = true;
 
     while(1) {
         zbus_sub_wait(&processing_thread_sub, &chan, K_FOREVER);
@@ -44,22 +68,9 @@ void processing_thread() {
         int err = zbus_chan_read(&sensor_data_chan, &msg, K_MSEC(10));
         if (err) {
             LOG_WRN("Could not read data channel. Error code: %d", err);
-            continue;
+            continue;;
         }
-        buffer += msg.uv.val1;
-        ok &= msg.ok;
-        //LOG_PRINTK("%d, %d\n", msg.uv.val1, buffer);
-        if (++counter == CONFIG_OVERSAMPLING) {
-            processed_data.value = buffer/CONFIG_OVERSAMPLING;
-            processed_data.to_save = ok;
-            processed_data.timestamp = k_uptime_get();
-
-            buffer = 0;
-            counter = 0;
-            zbus_chan_pub(&processing_thread_chan, &processed_data, K_MSEC(10));
-        } else {
-            zbus_chan_pub(&end_onebeat_chan, &err, K_MSEC(10));
-        }
+        process_one(&msg);
     }
 }
 
