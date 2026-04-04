@@ -3,6 +3,7 @@
  * SPDX-Licence-Identifier: Apache-2.0
  */
 
+#include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/syscalls/kernel.h>
 #include <zephyr/sys/__assert.h>
@@ -33,7 +34,6 @@ int ads1115_write_config(const struct device *dev){
     }
 
     return 0;
-
 }
 
 int ads1115_read_value(const struct device *dev) {
@@ -52,7 +52,10 @@ int ads1115_read_value(const struct device *dev) {
     return ret;
 }
 
-static int ads1115sensor_sample_fetch(const struct device *dev, enum sensor_channel chan){
+static int ads1115sensor_sample_fetch(
+    const struct device *dev,
+    enum sensor_channel chan)
+{
     struct ads1115sensor_data *dev_data = dev->data;
     int ret;
 
@@ -71,15 +74,14 @@ static int ads1115sensor_sample_fetch(const struct device *dev, enum sensor_chan
     if (ret < 0) {
 
     }
-
-
     return 0;
 }
 
 static int ads1115sensor_channel_get(
     const struct device *dev,
     enum sensor_channel chan,
-    struct sensor_value *val) {
+    struct sensor_value *val)
+{
 
     int64_t tmp;
 
@@ -89,15 +91,95 @@ static int ads1115sensor_channel_get(
     struct ads1115sensor_data *dev_data = dev->data;
 
     tmp = (int64_t)dev_data->reg_val * 512000;
-    val->val1 = (int32_t)tmp /(32768);
-    val->val2 = (tmp % 32768);
+//    val->val1 = (int32_t)tmp /(32768);
+//    val->val2 = (tmp % 32768);
+    sensor_value_from_micro(val, tmp/36768);
 
+    return 0;
+}
+
+
+static int ads1115sensor_attr_get(
+    const struct device *dev,
+    enum sensor_channel chan,
+    enum sensor_attribute attr,
+    struct sensor_value *val)
+{
+    __ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL ||
+                    chan == SENSOR_CHAN_VOLTAGE)
+
+    struct ads1115sensor_data *dev_data = dev->data;
+
+    switch (attr) {
+    case SENSOR_ATTR_GAIN:
+        sensor_value_from_micro(val, dev_data->fsr_micro);
+        break;
+    default:
+        return -EINVAL;
+    }
+    return 0;
+}
+
+int set_gain(struct ads1115sensor_data *dev_data, int fsr_micro)
+{
+    switch (fsr_micro) {
+        case 256000:
+            dev_data->fsr_micro = fsr_micro;
+            dev_data->config_buf[1] = (dev_data->config_buf[1] & ~ADS1115_CONFIG_MSB_PGA_MASK) | ADS1115_CONFIG_MSB_PGA_FSR_0_256;
+            break;
+        case 512000:
+            dev_data->fsr_micro = fsr_micro;
+            dev_data->config_buf[1] = (dev_data->config_buf[1] & ~ADS1115_CONFIG_MSB_PGA_MASK) | ADS1115_CONFIG_MSB_PGA_FSR_0_512;
+            break;
+        case 1024000:
+            dev_data->fsr_micro = fsr_micro;
+            dev_data->config_buf[1] = (dev_data->config_buf[1] & ~ADS1115_CONFIG_MSB_PGA_MASK) | ADS1115_CONFIG_MSB_PGA_FSR_1_024;
+            break;
+        case 2048000:
+            dev_data->fsr_micro = fsr_micro;
+            dev_data->config_buf[1] = (dev_data->config_buf[1] & ~ADS1115_CONFIG_MSB_PGA_MASK) | ADS1115_CONFIG_MSB_PGA_FSR_2_048;
+            break;
+        case 4096000:
+            dev_data->fsr_micro = fsr_micro;
+            dev_data->config_buf[1] = (dev_data->config_buf[1] & ~ADS1115_CONFIG_MSB_PGA_MASK) | ADS1115_CONFIG_MSB_PGA_FSR_4_096;
+            break;
+        case 6144000:
+            dev_data->fsr_micro = fsr_micro;
+            dev_data->config_buf[1] = (dev_data->config_buf[1] & ~ADS1115_CONFIG_MSB_PGA_MASK) | ADS1115_CONFIG_MSB_PGA_FSR_6_144;
+            break;
+        default:
+            return -EINVAL;
+    }
+    return 0;
+}
+
+static int ads1115sensor_attr_set(
+    const struct device *dev,
+    enum sensor_channel chan,
+    enum sensor_attribute attr,
+    const struct sensor_value *val)
+{
+
+    __ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL ||
+                    chan == SENSOR_CHAN_VOLTAGE)
+
+    struct ads1115sensor_data *dev_data = dev->data;
+
+    switch (attr) {
+    case SENSOR_ATTR_GAIN:
+        return set_gain(dev_data, sensor_value_to_micro(val));
+        break;
+    default:
+        return -EINVAL;
+    }
     return 0;
 }
 
 static DEVICE_API(sensor, ads1115sensor_api_funcs) = {
     .sample_fetch = ads1115sensor_sample_fetch,
     .channel_get = ads1115sensor_channel_get,
+    .attr_get = ads1115sensor_attr_get,
+    .attr_set = ads1115sensor_attr_set,
 };
 
 int ads1115sensor_init(const struct device *dev) {
@@ -121,6 +203,7 @@ int ads1115sensor_init(const struct device *dev) {
                               ADS1115_CONFIG_LSB_COMPLATCH_FALSE |
                               ADS1115_CONFIG_LSB_COMPALERT_DISABLE;
 
+    dev_data->fsr_micro = 512000;
     return 0;
 }
 

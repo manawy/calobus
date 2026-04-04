@@ -124,6 +124,7 @@ enum ADS1115Addr : uint8_t
 struct ads1115sensor_data {
     int16_t reg_val;
     uint8_t config_buf[3];
+    int fsr_micro;
 };
 
 struct ads1115sensor_config {
