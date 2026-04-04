@@ -1,6 +1,17 @@
 /*
  * Copyright (c) 2026 Fabien Georget <fabien.georget@usherbrooke.ca>
  * SPDX-Licence-Identifier: Apache-2.0
+ *
+ * datalogger_thread
+ * -----------------
+ *
+ *  The thread responsible for datalogging
+ *
+ *  Datalogging occurs on:
+ *      On LOG_PRINTK output
+ *      SD card: /SD:/m<date><time>.dat if CONFIG_SDLOGGING
+ *
+ * This thread is responsible for handling file creation, opening and closing
  */
 
 #include "processing_thread.h"
@@ -21,6 +32,8 @@
 
 LOG_MODULE_REGISTER(datalogger_thread, LOG_LEVEL_INF);
 
+// ------- ZBUS ------------------
+
 ZBUS_SUBSCRIBER_DEFINE(datalogger_thread_sub, 4);
 
 ZBUS_LISTENER_DEFINE(leds_busy_end_listener, listener_ledbusy_set);
@@ -33,42 +46,53 @@ ZBUS_CHAN_DEFINE(end_onebeat_chan,
                  ZBUS_MSG_INIT(0)
                  );
 
+// ---- Static global variables ------------------
 
+// File handlers
 #ifdef CONFIG_SDLOGGING
-struct fs_file_t file;
-bool file_is_open = false;
+    static struct fs_file_t file;
+    static bool file_is_open = false;
 #endif
 
+// Time at the start of the measurement
 static int64_t timestamp_0;
 
-const struct device *const rtc = DEVICE_DT_GET(DT_ALIAS(rtc));
+// The real time clock
+static const struct device *const rtc = DEVICE_DT_GET(DT_ALIAS(rtc));
 
-static int datalog_one() {
+// ---- helper functions --------------------------
 
-    struct processing_thread_msg processed_data;
-    int return_code = 0;
 
-    int err = zbus_chan_read(&processing_thread_chan,
-                             &processed_data, K_MSEC(98));
-    if (err) {
-        LOG_WRN("Could not read processed data channel. Error code: %d", err);
+// Log one timepoint onto the sd card
+static int datasdlog_one(struct processing_thread_msg* processed_data) {
+    if (!file_is_open) {
+        LOG_DBG("Datalogging file not open - no logging");
+        return -EIO;
     }
-    return_code = err;
+    char buf[128];
+    sprintf(buf, "%lld,%"PRId32"\n",
+            processed_data->timestamp-timestamp_0,
+            processed_data->value);
+    return fs_write(&file, buf, strlen(buf));
+}
+
+// Log one data-point
+static int datalog_one() {
+    struct processing_thread_msg processed_data;
+    int return_code =  zbus_chan_read(&processing_thread_chan,
+                             &processed_data, K_MSEC(98));
+    if (return_code != 0) {
+        LOG_WRN("Could not read processed data channel. Error code: %d", return_code);
+    }
     LOG_PRINTK("%lld,%d\n", processed_data.timestamp - timestamp_0, processed_data.value);
 
     #ifdef CONFIG_SDLOGGING
-    if (file_is_open) {
-        char buf[128];
-        sprintf(buf, "%lld,%"PRId32"\n",
-                processed_data.timestamp-timestamp_0,
-                processed_data.value);
-        fs_write(&file, buf, strlen(buf));
-    }
+        return_code = datasdlog_one(&processed_data);
     #endif // CONFIG_SDLOGGING
     return return_code;
-
 }
 
+// Setup the datlogging at the start of the measurement
 static int datalog_setup() {
     struct rtc_time tm;
     int ret = rtc_get_time(rtc, &tm);
@@ -103,13 +127,17 @@ static int datalog_setup() {
     return 0;
 }
 
+// Clean the datalogging environment at the end of the measurement
 static int datalog_end() {
     if (file_is_open) {
         fs_close(&file);
         file_is_open = false;
     }
+    LOG_DBG("Datalogging end");
     return 0;
 }
+
+// ----- Thread ----------------------------------------
 
 void datalogger_thread(void) {
     const struct zbus_channel* chan;
@@ -131,7 +159,7 @@ K_THREAD_DEFINE(datalogger_thread_id,
                 2048,
                 datalogger_thread,
                 NULL, NULL, NULL,
-                5, 0,
+                CONFIG_DATALOGGER_THREAD_PRIORITY, 0,
                 1000);
 
 

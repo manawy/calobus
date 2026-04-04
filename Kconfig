@@ -7,23 +7,13 @@ endmenu
 
 menu "Calobus"
 
-config HEARTBEAT_MSEC
-    int "Measurement heartbeat in msec"
-    default 100
-    help
-        The default measurement period
+menu "Measure"
+rsource "src/Kconfig.measure"
+endmenu
 
-config OVERSAMPLING
-    int "Number of samples to average"
-    default 10
-    help
-        The number of samples to average
-
-config HEALTHCHECK_BEAT_SECONDS
-    int "Health Check period in seconds"
-    default 60
-    help
-        The default health check period
+menu "Threads"
+rsource "src/Kconfig.threads"
+endmenu
 
 config SDLOGGING
     bool "Enable SDlogging"

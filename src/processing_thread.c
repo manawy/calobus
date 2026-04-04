@@ -67,7 +67,7 @@ K_THREAD_DEFINE(processing_thread_id,
                 2048,
                 processing_thread,
                 NULL, NULL, NULL,
-                5, 0,
+                CONFIG_PROCESSING_THREAD_PRIORITY, 0,
                 1000);
 
 

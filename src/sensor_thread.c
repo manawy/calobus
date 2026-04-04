@@ -148,7 +148,7 @@ K_THREAD_DEFINE(sensor_thread_id,
                 2048,
                 sensor_thread,
                 NULL, NULL, NULL,
-                3, 0,
+                CONFIG_SENSOR_THREAD_PRIORITY, 0,
                 CONFIG_HEARTBEAT_MSEC);
 
 
