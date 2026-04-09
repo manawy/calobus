@@ -1,0 +1,2 @@
+rsource "fluxsensor/Kconfig"
+rsource "tempsensor/Kconfig"

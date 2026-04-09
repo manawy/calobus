@@ -3,13 +3,12 @@
 # Copyright (c) 2026 F. Georget
 # SPDX-License-Identifier: Apache-2.0
 
-menu "custom device drivers"
-
 menuconfig ADS1115SENSOR
 	bool "ADS1115 Differential voltage Sensor"
 	default y
 	depends on DT_HAS_TI_ADS1115SENSOR_ENABLED
 	select I2C
+    select FLUXSENSOR
 	help
 	  Enable driver for ADS1115 voltage sensor (custom)
 
@@ -23,4 +22,3 @@ config ADS1115SENSOR_CONTINUOUS
 
 endif # ADS1115SENSOR
 
-endmenu

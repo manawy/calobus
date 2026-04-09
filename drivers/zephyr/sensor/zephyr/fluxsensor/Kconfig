@@ -1,0 +1,14 @@
+# Copyright (c) 2026 F. Georget
+# SPDX-License-Identifier: Apache-2.0
+
+# Emulation
+
+
+menuconfig EMULFLUXSENSOR
+	bool "Emulated flux sensor"
+	default y
+	depends on DT_HAS_ZEPHYR_EMUL_FLUXSENSOR_ENABLED
+    select FLUXSENSOR
+	help
+	  Enable driver for emulated fluxsensor
+

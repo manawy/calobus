@@ -47,7 +47,7 @@ static int adc_init(struct adc_sequence* sequence) {
     LOG_INF("ADC: initialized");
     return 0;
 }
-#elif defined CONFIG_DT_HAS_TI_ADS1115SENSOR_ENABLED
+#elif defined CONFIG_FLUXSENSOR
 static const struct device *fluxsensor = DEVICE_DT_GET(DT_ALIAS(fluxsensor));
 
 
@@ -112,7 +112,7 @@ static void get_and_publish() {
         //LOG_PRINTK("data ok ?: %d\n", sdata.ok);
         sdata.ok = ok;
         sdata.uv.val1 = value;
-    #elif defined CONFIG_DT_HAS_TI_ADS1115SENSOR_ENABLED
+    #elif defined CONFIG_FLUXSENSOR
         struct sensor_value sens_val;
         sensor_sample_fetch(fluxsensor);
         sensor_channel_get(fluxsensor, SENSOR_CHAN_VOLTAGE, &sens_val);
@@ -138,7 +138,7 @@ void sensor_thread() {
         k_sleep(K_SECONDS(1));
         adc_init(&sequence);
     }
-    #elif defined CONFIG_DT_HAS_TI_ADS1115SENSOR_ENABLED
+    #elif defined CONFIG_FLUXSENSOR
     adc_init(fluxsensor);
     #endif
 

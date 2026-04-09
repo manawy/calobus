@@ -1,0 +1,32 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/{
+    zephyr,user {
+    };
+    chosen {
+    };
+    aliases {
+        ledok = &led0;
+        ledbusy = &led1;
+        fluxsensor = &fluxsensor;
+        boardt = &tempsensor;
+    };
+    leds {
+        status = "okay";
+        led1: led_1 {
+            gpios = <&gpio0 1 GPIO_ACTIVE_HIGH>;
+            label = "LED 1";
+        };
+    };
+    fluxsensor: fluxsensor {
+        compatible = "zephyr,emul-fluxsensor";
+        status = "okay";
+    };
+    tempsensor: tempsensor {
+        compatible = "zephyr,emul-tempsensor";
+        status = "okay";
+    };
+    evdev {
+        compatible = "zephyr,native-linux-evdev";
+    };
+};

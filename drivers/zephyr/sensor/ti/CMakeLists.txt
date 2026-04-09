@@ -2,6 +2,6 @@
 #  SPDX-License-Identifier: Apache-2.0
 
 
-add_subdirectory(ads1115sensor)
+add_subdirectory_ifdef(CONFIG_DT_HAS_TI_ADS1115SENSOR_ENABLED ads1115sensor)
 
 
