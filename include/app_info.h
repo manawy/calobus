@@ -7,6 +7,7 @@
 
 #include <zephyr/zbus/zbus.h>
 #include <stdint.h>
+#include <zephyr/app_version.h>
 
 /* The information stored in app_info channel of zbus
  *
@@ -15,10 +16,6 @@
  */
 struct app_info_msg {
     const char name[32];
-    const struct  {
-        uint8_t major;
-        uint8_t minor;
-    } firmware_version;
     const struct {
         uint8_t major;
         uint8_t minor;

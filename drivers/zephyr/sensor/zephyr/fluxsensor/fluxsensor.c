@@ -127,7 +127,7 @@ static DEVICE_API(sensor, fluxsensor_api_funcs) = {
 int fluxsensor_init(const struct device *dev) {
 
     struct fluxsensor_data *dev_data = dev->data;
-    const struct fluxsensor_config *dev_cfg = dev->config;
+    // const struct fluxsensor_config *dev_cfg = dev->config;
 
     dev_data->fsr_micro = 512000;
     return 0;
@@ -136,7 +136,7 @@ int fluxsensor_init(const struct device *dev) {
 #define FLUXSENSOR_DEFINE(inst)                                                 \
     static struct fluxsensor_data fluxsensor_data_##inst;                       \
                                                                                 \
-    static const struct fluxsensor_config fluxsensor_config_##inst {}           \
+    static const struct fluxsensor_config fluxsensor_config_##inst = {};        \
                                                                                 \
     SENSOR_DEVICE_DT_INST_DEFINE(inst,                                          \
                                  fluxsensor_init,                               \

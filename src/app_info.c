@@ -15,6 +15,5 @@ ZBUS_CHAN_DEFINE(
     NULL,
     ZBUS_OBSERVERS_EMPTY,
     ZBUS_MSG_INIT(.name = "CaloBus",
-                  .firmware_version={0, 1},
                   .hardware_version={0, 1})
 );

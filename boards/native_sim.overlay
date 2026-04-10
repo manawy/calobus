@@ -29,4 +29,47 @@
     evdev {
         compatible = "zephyr,native-linux-evdev";
     };
+	euart0: uart-0 {
+		compatible = "zephyr,uart-emul";
+		status = "okay";
+		current-speed = <0>;
+		rx-fifo-size = <256>;
+		tx-fifo-size = <256>;
+	};
+};
+
+&flashcontroller0 {
+	reg = <0x00000000 DT_SIZE_K(1024)>;
+};
+
+&flash0 {
+	reg = <0x00000000 DT_SIZE_K(1024)>;
+	erase-block-size = <512>;
+
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		flashdisk_partition: partition@0 {
+			label = "flashdisk";
+			reg = <0x00000000 DT_SIZE_K(1024)>;
+		};
+	};
+};
+
+/ {
+	test_disk: storage_disk {
+		compatible = "zephyr,flash-disk";
+		partition = <&flashdisk_partition>;
+		disk-name = "SD";
+		cache-size = <4096>;
+	};
+
+	ramdisk0 {
+		compatible = "zephyr,ram-disk";
+		disk-name = "RAM";
+		sector-size = <512>;
+		sector-count = <192>;
+	};
 };

@@ -35,14 +35,10 @@ static int tempsensor_channel_get(
     struct sensor_value *val)
 {
 
-    int64_t tmp;
-
     __ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL || 
                     chan == SENSOR_CHAN_AMBIENT_TEMP);
 
-    tmp = 5 * 512000;
-    sensor_value_from_micro(val, tmp/36768);
-
+    sensor_value_from_float(val, 22.5);
     return 0;
 }
 
@@ -56,7 +52,7 @@ static DEVICE_API(sensor, tempsensor_api_funcs) = {
 int tempsensor_init(const struct device *dev) {
 
     struct tempsensor_data *dev_data = dev->data;
-    const struct tempsensor_config *dev_cfg = dev->config;
+    //const struct tempsensor_config *dev_cfg = dev->config;
 
     dev_data->fsr_micro = 512000;
     return 0;
@@ -65,7 +61,7 @@ int tempsensor_init(const struct device *dev) {
 #define TEMPSENSOR_DEFINE(inst)                                                 \
     static struct tempsensor_data tempsensor_data_##inst;                       \
                                                                                 \
-    static c:onst struct tempsensor_config tempsensor_config_##inst {}           \
+    static const struct tempsensor_config tempsensor_config_##inst = {};        \
                                                                                 \
     SENSOR_DEVICE_DT_INST_DEFINE(inst,                                          \
                                  tempsensor_init,                               \

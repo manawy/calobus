@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 description: |
-    An emulated fluxsensor (voltage sensor)
+    An emulated temperature sensor
 
-    fluxsensor {
-        compatible = "zephyr,emul-fluxsensor";
+    tempsensor {
+        compatible = "zephyr,emul-tempsensor";
         status = "okay";
     };
 
-compatible: "zephyr,emul-fluxsensor"
+compatible: "zephyr,emul-tempsensor"
 
 include: [sensor-device.yaml]
 

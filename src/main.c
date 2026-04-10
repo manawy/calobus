@@ -9,12 +9,10 @@
 #include "filesystem.h"
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/uart.h>
-#include <zephyr/input/input.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
@@ -36,28 +34,9 @@ void console_init() {
     #endif
 }
 
-//     Input
-// -------------------
-
-bool is_ready = false;
-bool MeasurementOn = false;
-
-static void btn_toggle_measurement(struct input_event *evt, void *user_data) {
-    if (!is_ready) {
-        return;
-    }
-    if ((evt->code == INPUT_KEY_0) & (evt->value == 0)) {
-        if (!MeasurementOn) {
-            MeasurementOn = start_measurement();
-        } else {
-            MeasurementOn = end_measurement();
-        }
-    }
-}
-INPUT_CALLBACK_DEFINE(NULL, btn_toggle_measurement, NULL);
-
 //       Main
 //------------------
+
 
 int main() {
     console_init();
@@ -81,16 +60,13 @@ int main() {
 
     LOG_PRINTK("-----------------------------\n");
     LOG_PRINTK("%s\n", app_info->name);
-    LOG_PRINTK(" firmware %d.%d\n", 
-            app_info->firmware_version.major,
-            app_info->firmware_version.minor);
+    LOG_PRINTK(" firmware " APP_VERSION_STRING "\n");
     LOG_PRINTK(" hardware %d.%d\n", 
             app_info->hardware_version.major,
             app_info->hardware_version.minor);
     LOG_PRINTK("-----------------------------\n");
 
-    ledon_start();
-    is_ready = true;
+    set_measurement_ready();
 
     return 0;
 }

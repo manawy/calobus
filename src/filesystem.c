@@ -54,20 +54,20 @@ int init_sd_card() {
         uint32_t block_size;
         if (disk_access_ioctl(disk_pdrv,
                 DISK_IOCTL_GET_SECTOR_COUNT, &block_count)) {
-            LOG_ERR("Unable to get sector count");
+            LOG_INF("Unable to get sector count");
             break;
         }
-        LOG_WRN("Block count %u", block_count);
+        LOG_INF("Block count %u", block_count);
 
         if (disk_access_ioctl(disk_pdrv,
                 DISK_IOCTL_GET_SECTOR_SIZE, &block_size)) {
             LOG_ERR("Unable to get sector size");
             break;
         }
-        LOG_WRN("Sector size %u\n", block_size);
+        LOG_INF("Sector size %u\n", block_size);
 
         memory_size_mb = (uint64_t)block_count * block_size;
-        LOG_WRN("Memory Size(MB) %u\n", (uint32_t)(memory_size_mb >> 20));
+        LOG_INF("Memory Size(MB) %u\n", (uint32_t)(memory_size_mb >> 20));
 
         /*
         if (disk_access_ioctl(disk_pdrv,
@@ -79,7 +79,7 @@ int init_sd_card() {
     } while (0);
 
 
-    LOG_WRN("SD card disk access init");
+    LOG_INF("SD card disk access initialized successfully");
     k_sleep(K_SECONDS(1));
 
     mp_sd.mnt_point = disk_mount_pt;

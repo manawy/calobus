@@ -37,8 +37,7 @@ void health_check_thread() {
             LOG_ERR("Failed reading board temperature");
         } else {
             sensor_channel_get(tboard, SENSOR_CHAN_AMBIENT_TEMP, &temp);
-            LOG_PRINTK("Board temperature %.2f\n",
-                    sensor_value_to_float(&temp));
+            LOG_PRINTK("Board temperature %.2f\n", sensor_value_to_double(&temp));
         }
     }
 }

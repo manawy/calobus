@@ -17,12 +17,19 @@
 #include "processing_thread.h"
 #include "toggle_measurement.h"
 #include "zbus_channels.h"
+#include <time.h>
 #include <zephyr/drivers/rtc.h>
 
 #include <stdint.h>
 #include <stdio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+
+#ifdef CONFIG_RTC_EMUL
+#include <native_rtc.h>
+#include <time.h>
+#endif
+
 
 #ifdef CONFIG_SDLOGGING
 #include "filesystem.h"
@@ -83,7 +90,7 @@ static int datalog_setup() {
     int ret = rtc_get_time(rtc, &tm);
     timestamp_0 = k_uptime_get();
     if (ret <0) {
-        LOG_ERR("Cannot get RTC time !");
+        LOG_ERR("Cannot get RTC time ! return code : %d", ret);
     }
     LOG_PRINTK("#Initial timestamp: ");
     LOG_PRINTK("%02d%02d%02d_%02d%02d%02d ",
@@ -126,6 +133,16 @@ static int datalog_end() {
 
 void datalogger_thread(void) {
     const struct zbus_channel* chan;
+
+    #ifdef CONFIG_RTC_EMUL
+        struct timespec ts ={.tv_sec=0,.tv_nsec=0};
+        uint32_t nsec = 0;
+        native_rtc_gettime(RTC_CLOCK_PSEUDOHOSTREALTIME, &nsec, &ts.tv_sec);
+        struct rtc_time tm;
+        gmtime_r(&ts.tv_sec, rtc_time_to_tm(&tm));
+        rtc_set_time(rtc, &tm);
+    #endif
+
     while(1) {
         zbus_sub_wait(&datalogger_thread_sub, &chan, K_FOREVER);
 
