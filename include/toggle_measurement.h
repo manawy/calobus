@@ -28,8 +28,6 @@ void set_measurement_ready();
 /* Return true if measurement is on  */
 bool is_measurement_on();
 
-void btn_toggle_measurement(struct input_event *evt, void *user_data);
-
 ZBUS_CHAN_DECLARE(start_measure_chan);
 ZBUS_CHAN_DECLARE(start_trigger_chan);
 ZBUS_CHAN_DECLARE(end_measure_chan);

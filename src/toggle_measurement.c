@@ -71,13 +71,13 @@ static void toggle_measurement() {
     }
 }
 
-void btn_toggle_measurement(struct input_event *evt, void *user_data) {
+// ---- Input ----
+
+static void btn_toggle_measurement(struct input_event *evt, void *user_data) {
     if ((evt->code == INPUT_KEY_0) && (evt->value == 0)) {
         toggle_measurement();
     }
 }
-
-// ---- Input ----
 
 INPUT_CALLBACK_DEFINE(NULL, btn_toggle_measurement, NULL);
 

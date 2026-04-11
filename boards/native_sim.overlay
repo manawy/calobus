@@ -29,13 +29,6 @@
     evdev {
         compatible = "zephyr,native-linux-evdev";
     };
-	euart0: uart-0 {
-		compatible = "zephyr,uart-emul";
-		status = "okay";
-		current-speed = <0>;
-		rx-fifo-size = <256>;
-		tx-fifo-size = <256>;
-	};
 };
 
 &flashcontroller0 {
