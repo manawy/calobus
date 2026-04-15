@@ -14,16 +14,14 @@
  * This thread is responsible for handling file creation, opening and closing
  */
 
-#include "processing_thread.h"
-#include "toggle_measurement.h"
+#include "measure/processor.h"
 #include "zbus_channels.h"
-#include <time.h>
-#include <zephyr/drivers/rtc.h>
 
 #include <stdint.h>
 #include <stdio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/drivers/rtc.h>
 
 #ifdef CONFIG_RTC_EMUL
 #include <native_rtc.h>

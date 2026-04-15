@@ -7,7 +7,6 @@
 
 #include "zephyr/zbus/zbus.h"
 #include <stdbool.h>
-#include <zephyr/input/input.h>
 
 /* Start a measurement
  *
@@ -20,6 +19,10 @@ bool start_measurement();
  * Return false if measurement successfully stopped
  */
 bool end_measurement();
+
+/* Toggle the measurement state
+ */
+void toggle_measurement();
 
 /* Return true if equipment is ready */
 bool is_measurement_ready();

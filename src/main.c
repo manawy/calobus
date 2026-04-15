@@ -4,8 +4,8 @@
  */
 
 #include "app_info.h"
-#include "leds_interface.h"
-#include "toggle_measurement.h"
+#include "interface/leds.h"
+#include "measure/toggle.h"
 #include "filesystem.h"
 
 #include <stdbool.h>

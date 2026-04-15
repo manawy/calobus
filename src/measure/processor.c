@@ -3,9 +3,9 @@
  * SPDX-Licence-Identifier: Apache-2.0
  */
 
-#include "processing_thread.h"
 #include "zbus_channels.h"
-#include "sensor_thread.h"
+#include "measure/processor.h"
+#include "measure/sensor.h"
 #include "zephyr/drivers/sensor.h"
 
 #include <stdint.h>

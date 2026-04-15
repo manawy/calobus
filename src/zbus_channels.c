@@ -1,8 +1,12 @@
+/*
+ * Copyright (c) 2026 Fabien Georget <fabien.georget@usherbrooke.ca>
+ * SPDX-Licence-Identifier: Apache-2.0
+ */
 #include <zephyr/zbus/zbus.h>
 
-#include "sensor_thread.h"
-#include "leds_interface.h"
-#include "processing_thread.h"
+#include "measure/sensor.h"
+#include "measure/processor.h"
+#include "interface/leds.h"
 
 ZBUS_SUBSCRIBER_DEFINE(sensor_thread_sub, 4);
 ZBUS_SUBSCRIBER_DEFINE(processing_thread_sub, 4);

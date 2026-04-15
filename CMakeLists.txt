@@ -9,18 +9,33 @@ find_package(Zephyr)
 project(CaloBus)
 
 
-#add_subdirectory(drivers)
+#add_subdirectory(rivers)
 
-target_sources(app PRIVATE 
+set (APP_SOURCES
+
     src/main.c
     src/app_info.c
-    src/datalogger_thread.c
     src/filesystem.c
     src/health_check.c
-    src/leds_interface.c
-    src/processing_thread.c
-    src/sensor_thread.c
-    src/toggle_measurement.c
     src/zbus_channels.c
+    src/measure/datalogger.c
+    src/measure/processor.c
+    src/measure/sensor.c
+    src/measure/toggle.c
+    src/interface/leds.c
+
 )
+
+macro(add_source_if_def config_option file)
+    if(DEFINED ${config_option})
+        message("add " ${file} ".")
+        list(APPEND APP_SOURCES ${file})
+    endif()
+endmacro()
+
+add_source_if_def(CONFIG_SHELL src/interface/shell.c)
+add_source_if_def(CONFIG_INPUT src/interface/input.c)
+
+target_sources(app PRIVATE ${APP_SOURCES})
+
 target_include_directories(app PRIVATE include)

@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Fabien Georget <fabien.georget@usherbrooke.ca>
  * SPDX-Licence-Identifier: Apache-2.0
  */
-#include "leds_interface.h"
+#include "interface/leds.h"
 #include "zbus_channels.h"
 
 #include <zephyr/kernel.h>

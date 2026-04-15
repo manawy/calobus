@@ -5,8 +5,7 @@
 
 #include <zephyr/kernel.h>
 
-#include "sensor_thread.h"
-#include "toggle_measurement.h"
+#include "measure/sensor.h"
 #include "zephyr/devicetree.h"
 #include "zbus_channels.h"
 
@@ -15,14 +14,11 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/adc.h>
 
-//#include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/sensor.h>
 
 
 // --- Logging ---
 LOG_MODULE_REGISTER(sensor_thread, LOG_LEVEL_INF);
-
-// --- Zbus ------
 
 // --- Device tree -----------
 #ifdef CONFIG_DT_HAS_TI_ADS1115_ENABLED
