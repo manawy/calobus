@@ -4,6 +4,7 @@
  */
 #include <zephyr/zbus/zbus.h>
 
+#include "app_info.h"
 #include "measure/sensor.h"
 #include "measure/processor.h"
 #include "interface/leds.h"
@@ -13,6 +14,16 @@ ZBUS_SUBSCRIBER_DEFINE(processing_thread_sub, 4);
 ZBUS_SUBSCRIBER_DEFINE(datalogger_thread_sub, 4);
 ZBUS_LISTENER_DEFINE(leds_busy_listener, listener_ledbusy_set);
 ZBUS_LISTENER_DEFINE(leds_busy_end_listener, listener_ledbusy_set);
+
+ZBUS_CHAN_DEFINE(
+    app_info_chan,
+    struct app_info_msg,
+    NULL,
+    NULL,
+    ZBUS_OBSERVERS_EMPTY,
+    ZBUS_MSG_INIT(.name = "CaloBus",
+                  .hardware_version={0, 1})
+);
 
 // -- Toggle measurement
 

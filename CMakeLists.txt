@@ -14,7 +14,6 @@ project(CaloBus)
 set (APP_SOURCES
 
     src/main.c
-    src/app_info.c
     src/filesystem.c
     src/health_check.c
     src/zbus_channels.c
@@ -28,7 +27,6 @@ set (APP_SOURCES
 
 macro(add_source_if_def config_option file)
     if(DEFINED ${config_option})
-        message("add " ${file} ".")
         list(APPEND APP_SOURCES ${file})
     endif()
 endmacro()
