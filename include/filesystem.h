@@ -5,10 +5,10 @@
 
 #pragma once
 
+#include <time.h>
+
 #define DISK_DRIVE_NAME "SD"
 #define DISK_MOUNT_POINT "/SD:"
-
-struct rtc_time;
 
 // SD Card initialization
 //
@@ -24,6 +24,6 @@ void get_sd_full_path(char *path, const char* filename);
 // Return a path with a timed suffix
 void get_sd_timed_path(char *path,
                        const char* prefix,
-                       struct rtc_time* tm,
+                       struct tm* tm,
                        const char* suffix
                       );

@@ -16,6 +16,7 @@
 
 #include "measure/processor.h"
 #include "zbus_channels.h"
+#include "calo_time.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -41,14 +42,12 @@ LOG_MODULE_REGISTER(datalogger_thread, LOG_LEVEL_INF);
 // Time at the start of the measurement
 static int64_t timestamp_0;
 
-// The real time clock
-static const struct device *const rtc = DEVICE_DT_GET(DT_ALIAS(rtc));
-
 // ---- helper functions --------------------------
 
 
 // Log one timepoint onto the sd card
-static int datasdlog_one(struct processing_thread_msg* processed_data) {
+static int datasdlog_one(struct processing_thread_msg* processed_data) 
+{
     if (!file_is_open) {
         LOG_DBG("Datalogging file not open - no logging");
         return -EIO;
@@ -61,7 +60,8 @@ static int datasdlog_one(struct processing_thread_msg* processed_data) {
 }
 
 // Log one data-point
-static int datalog_one() {
+static int datalog_one() 
+{
     struct processing_thread_msg processed_data;
     int return_code =  zbus_chan_read(&processing_thread_chan,
                              &processed_data, K_MSEC(98));
@@ -77,15 +77,18 @@ static int datalog_one() {
 }
 
 // Setup the datlogging at the start of the measurement
-static int datalog_setup() {
-    struct rtc_time tm;
-    int ret = rtc_get_time(rtc, &tm);
+static int datalog_setup() 
+{
+    struct tm tm;
+
+    int ret = get_time(&tm);
     timestamp_0 = k_uptime_get();
     if (ret <0) {
         LOG_ERR("Cannot get RTC time ! return code : %d", ret);
     }
+
     LOG_PRINTK("#Initial timestamp: ");
-    LOG_PRINTK("%02d%02d%02d_%02d%02d%02d ",
+    LOG_PRINTK("%02d-%02d-%02d %02d:%02d:%02d ",
                 tm.tm_year-100,
                 tm.tm_mon+1,
                 tm.tm_mday,

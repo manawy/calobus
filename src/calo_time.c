@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: Copyright Fabien Georget
 // SPDX-License-Identifier: Apache-2.0 
 
-#include <time.h>
+#include "calo_time.h"
+
+#include <zephyr/sys/clock.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/logging/log.h>
@@ -51,6 +53,28 @@ static int set_time_from_external_rtc() {
     return 0;
 }
 #endif
+
+int get_time(struct tm *tm)
+{
+    struct timespec tp;
+    sys_clock_gettime(SYS_CLOCK_REALTIME, &tp);
+    gmtime_r(&tp.tv_sec, tm);
+    return 0;
+}
+
+int get_time_string(struct tm *tm, char *buf, int offset)
+{
+    snprintfcb(&buf[offset], 15,
+               "%02d%02d%02d_%02d%02d%02d",
+                tm->tm_year-100,
+                tm->tm_mon+1,
+                tm->tm_mday,
+                tm->tm_hour,
+                tm->tm_min,
+                tm->tm_sec
+               );
+    return 0;
+}
 
 int init_time() 
 {
