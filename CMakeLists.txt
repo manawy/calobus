@@ -13,7 +13,7 @@ project(CaloBus)
 
 set (APP_SOURCES
 
-    src/main.c
+    src/main.cpp
 
     src/calo_time.c
     src/filesystem.c

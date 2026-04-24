@@ -8,6 +8,10 @@
 #include "zephyr/zbus/zbus.h"
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Start a measurement
  *
  * Return true if measurement successfully started
@@ -34,3 +38,7 @@ bool is_measurement_on();
 ZBUS_CHAN_DECLARE(start_measure_chan);
 ZBUS_CHAN_DECLARE(start_trigger_chan);
 ZBUS_CHAN_DECLARE(end_measure_chan);
+
+#ifdef __cplusplus
+}
+#endif

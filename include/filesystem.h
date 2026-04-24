@@ -10,6 +10,10 @@
 #define DISK_DRIVE_NAME "SD"
 #define DISK_MOUNT_POINT "/SD:"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Initialize the filesystem according configuration
 void init_filesystem();
 
@@ -30,3 +34,7 @@ void get_sd_timed_path(char *path,
                        struct tm* tm,
                        const char* suffix
                       );
+
+#ifdef __cplusplus
+}
+#endif
