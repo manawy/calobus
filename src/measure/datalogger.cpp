@@ -32,7 +32,24 @@
 
 LOG_MODULE_REGISTER(datalogger_thread, LOG_LEVEL_INF);
 
-class FileDatalogger
+template <class T>
+class IDatalogger
+{
+    int start_measurement() {
+        static_cast<T>(this)->start_measurement();
+    }
+
+    int end_measurement() {
+        static_cast<T>(this)->end_measurement();
+    }
+
+    int log_one(const struct processing_thread_msg* const data) {
+        static_cast<T>(this)->log_one(data);
+    }
+};
+
+
+class FileDatalogger: public IDatalogger<FileDatalogger>
 {
 public:
     FileDatalogger():
