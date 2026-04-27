@@ -20,7 +20,7 @@ set (APP_SOURCES
     src/health_check.cpp
     src/zbus_channels.c
 
-    src/measure/datalogger.c
+    src/measure/datalogger.cpp
     src/measure/processor.c
     src/measure/sensor.c
     src/measure/toggle.c
