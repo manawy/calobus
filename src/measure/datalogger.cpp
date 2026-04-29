@@ -30,24 +30,55 @@
 #include <zephyr/fs/fs.h>
 #endif
 
-LOG_MODULE_REGISTER(datalogger_thread, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(datalogger_thread, CONFIG_LOG_DEFAULT_LEVEL);
 
-template <class T>
+template <class Derived>
 class IDatalogger
 {
-    int start_measurement() {
-        static_cast<T>(this)->start_measurement();
+public:
+    int start_measurement(const int64_t& timestamp_0) {
+        return static_cast<Derived>(this)->start_measurement(timestamp_0);
     }
 
-    int end_measurement() {
-        static_cast<T>(this)->end_measurement();
+    int stop_measurement() {
+        return static_cast<Derived>(this)->end_measurement();
     }
 
     int log_one(const struct processing_thread_msg* const data) {
-        static_cast<T>(this)->log_one(data);
+        return static_cast<Derived>(this)->log_one(data);
     }
+protected:
+    IDatalogger() = default;
+    friend Derived;
 };
 
+
+class ConsoleDataLogger: public IDatalogger<ConsoleDataLogger>
+{
+public:
+    ConsoleDataLogger():
+        m_timestamp_0(0)
+    {}
+    int start_measurement(const int64_t& timestamp_0) {
+        m_timestamp_0 = timestamp_0;
+        LOG_PRINTK("------ Start measurement ------");
+        return 0;
+    };
+    int stop_measurement() {
+        LOG_PRINTK("------ Stop  measurement ------");
+        return 0;
+    };
+    int log_one(const struct processing_thread_msg* const data) {
+        LOG_PRINTK("%lld,%d\n",
+                data->timestamp - m_timestamp_0,
+                data->value);
+        return 0;
+    }
+
+
+private:
+    int64_t m_timestamp_0;
+};
 
 class FileDatalogger: public IDatalogger<FileDatalogger>
 {
@@ -59,9 +90,9 @@ public:
 
     ~FileDatalogger();
 
-    int start_measurement();
+    int start_measurement(const int64_t& timestamp_0);
 
-    int end_measurement();
+    int stop_measurement();
 
     int log_one(const struct processing_thread_msg* const data);
 
@@ -82,17 +113,14 @@ FileDatalogger::~FileDatalogger()
     close_file();
 }
 
-int FileDatalogger::start_measurement()
+int FileDatalogger::start_measurement(const int64_t& timestamp_0)
 {
-    m_timestamp_0 = k_uptime_get();
+    m_timestamp_0 = timestamp_0;
 
-    if (open_file()) {
-        write_header();
-        return 0;
-    }
-    else {
+    if (!open_file()) 
         return -EIO;
-    }
+    write_header();
+    return 0;
 }
 
 void FileDatalogger::write_header() 
@@ -101,7 +129,7 @@ void FileDatalogger::write_header()
     fs_write(&m_file, buf, strlen(buf));
 }
 
-int FileDatalogger::end_measurement()
+int FileDatalogger::stop_measurement()
 {
     if (close_file())
         return 0;
@@ -157,75 +185,30 @@ int FileDatalogger::log_one(const struct processing_thread_msg* const data)
 
 }
 
-// ---- Static global variables ------------------
-
-
-// Time at the start of the measurement
-static int64_t timestamp_0;
-
-// ---- helper functions --------------------------
-
-
-
-// Log one data-point
-static int datalog_one(const struct processing_thread_msg* const processed_data) 
-{
-    LOG_PRINTK("%lld,%d\n", processed_data->timestamp - timestamp_0, processed_data->value);
-    return 0;
-}
-
-// Setup the datlogging at the start of the measurement
-static int datalog_setup() 
-{
-    struct tm tm;
-
-    int ret = get_time(&tm);
-    timestamp_0 = k_uptime_get();
-    if (ret <0) {
-        LOG_ERR("Cannot get RTC time ! return code : %d", ret);
-    }
-
-    LOG_PRINTK("#Initial timestamp: ");
-    LOG_PRINTK("%02d-%02d-%02d %02d:%02d:%02d ",
-                tm.tm_year-100,
-                tm.tm_mon+1,
-                tm.tm_mday,
-                tm.tm_hour,
-                tm.tm_min,
-                tm.tm_sec);
-    LOG_PRINTK("%lld\n", timestamp_0);
-
-    return 0;
-}
-
-// Clean the datalogging environment at the end of the measurement
-static int datalog_end() {
-    LOG_DBG("Datalogging end");
-    return 0;
-}
-
 // ----- Thread ----------------------------------------
 
 void datalogger_thread(void) {
     const struct zbus_channel* chan;
-    struct processing_thread_msg processed_data;
     FileDatalogger fdatalog;
+    ConsoleDataLogger cdatalog;
 
     while(1) {
         zbus_sub_wait(&datalogger_thread_sub, &chan, K_FOREVER);
 
         if (&processing_thread_chan == chan){
+            struct processing_thread_msg processed_data;
             zbus_chan_read(&processing_thread_chan,
                              &processed_data, K_MSEC(50));
-            int rc = datalog_one(&processed_data);
-            fdatalog.log_one(&processed_data);
+            cdatalog.log_one(&processed_data);
+            int rc = fdatalog.log_one(&processed_data);
             zbus_chan_pub(&end_onebeat_chan, &rc, K_MSEC(50));
         } else if (&start_measure_chan == chan) {
-            fdatalog.start_measurement();
-            datalog_setup();
+            auto timestamp_0 = k_uptime_get();
+            fdatalog.start_measurement(timestamp_0);
+            cdatalog.start_measurement(timestamp_0);
         } else if (&end_measure_chan == chan) {
-            fdatalog.end_measurement();
-            datalog_end();
+            fdatalog.stop_measurement();
+            cdatalog.stop_measurement();
         }
     }
 }

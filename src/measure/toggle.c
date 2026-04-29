@@ -13,13 +13,10 @@
 
 #define HEARTBEAT K_MSEC(CONFIG_HEARTBEAT_MSEC)
 
-LOG_MODULE_REGISTER(toggle_measurement, CONFIG_LOG_DEFAULT_LEVEL);
-
 static bool MeasurementReady = false;
 static bool MeasurementOn = false;
 
 void run_trigger() {
-    LOG_DBG("run trigger");
     zbus_chan_notify(&start_trigger_chan, K_MSEC(100));
 }
 
@@ -30,7 +27,6 @@ bool start_measurement() {
     if (!is_measurement_ready() || is_measurement_on()) {
         return false;
     }
-    LOG_PRINTK(" ---- Start measurement ---- \n");
     k_timer_start(&heartbeat_timer, HEARTBEAT, HEARTBEAT);
     zbus_chan_notify(&start_measure_chan, K_MSEC(100));
     MeasurementOn = true;
@@ -41,7 +37,6 @@ bool end_measurement() {
     if (!is_measurement_on()) {
         return false;
     }
-    LOG_PRINTK(" ---- Stop measurement ---- \n");
     k_timer_stop(&heartbeat_timer);
     zbus_chan_notify(&end_measure_chan, K_MSEC(100));
     MeasurementOn = false;
