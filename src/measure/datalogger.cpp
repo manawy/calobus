@@ -32,28 +32,26 @@
 
 LOG_MODULE_REGISTER(datalogger_thread, CONFIG_LOG_DEFAULT_LEVEL);
 
-template <class Derived>
-class IDatalogger
+struct IDatalogger
 {
-public:
-    int start_measurement(const int64_t& timestamp_0) {
-        return static_cast<Derived>(this)->start_measurement(timestamp_0);
+    template <typename Self>
+    int start(this Self&& self, const int64_t& timestamp_0) {
+        return self.start_measurement(timestamp_0);
     }
 
-    int stop_measurement() {
-        return static_cast<Derived>(this)->end_measurement();
+    template <typename Self>
+    int stop(this Self&& self) {
+        return self.stop_measurement();
     }
 
-    int log_one(const struct processing_thread_msg* const data) {
-        return static_cast<Derived>(this)->log_one(data);
+    template <typename Self>
+    int log(this Self&& self, const struct processing_thread_msg* const data) {
+        return self.log_one(data);
     }
-protected:
-    IDatalogger() = default;
-    friend Derived;
 };
 
 
-class ConsoleDataLogger: public IDatalogger<ConsoleDataLogger>
+class ConsoleDataLogger: public IDatalogger
 {
 public:
     ConsoleDataLogger():
@@ -61,11 +59,11 @@ public:
     {}
     int start_measurement(const int64_t& timestamp_0) {
         m_timestamp_0 = timestamp_0;
-        LOG_PRINTK("------ Start measurement ------");
+        LOG_PRINTK("------ Start measurement ------\n");
         return 0;
     };
     int stop_measurement() {
-        LOG_PRINTK("------ Stop  measurement ------");
+        LOG_PRINTK("------ Stop  measurement ------\n");
         return 0;
     };
     int log_one(const struct processing_thread_msg* const data) {
@@ -80,15 +78,15 @@ private:
     int64_t m_timestamp_0;
 };
 
-class FileDatalogger: public IDatalogger<FileDatalogger>
+class FileDataLogger: public IDatalogger
 {
 public:
-    FileDatalogger():
+    FileDataLogger():
         m_file_open(false),
         m_timestamp_0(0)
     {}
 
-    ~FileDatalogger();
+    ~FileDataLogger();
 
     int start_measurement(const int64_t& timestamp_0);
 
@@ -108,12 +106,12 @@ private:
 };
 
 
-FileDatalogger::~FileDatalogger() 
+FileDataLogger::~FileDataLogger()
 {
     close_file();
 }
 
-int FileDatalogger::start_measurement(const int64_t& timestamp_0)
+int FileDataLogger::start_measurement(const int64_t& timestamp_0)
 {
     m_timestamp_0 = timestamp_0;
 
@@ -123,13 +121,13 @@ int FileDatalogger::start_measurement(const int64_t& timestamp_0)
     return 0;
 }
 
-void FileDatalogger::write_header() 
+void FileDataLogger::write_header()
 {
     constexpr char buf[] = "# timestamp, voltage";
     fs_write(&m_file, buf, strlen(buf));
 }
 
-int FileDatalogger::stop_measurement()
+int FileDataLogger::stop_measurement()
 {
     if (close_file())
         return 0;
@@ -138,7 +136,7 @@ int FileDatalogger::stop_measurement()
 }
 
 
-bool FileDatalogger::open_file() 
+bool FileDataLogger::open_file()
 {
 
     if (m_file_open) return m_file_open;
@@ -159,7 +157,7 @@ bool FileDatalogger::open_file()
     return m_file_open;
 }
 
-bool FileDatalogger::close_file() 
+bool FileDataLogger::close_file()
 {
     if (m_file_open)
     {
@@ -169,7 +167,7 @@ bool FileDatalogger::close_file()
     return m_file_open;
 }
 
-int FileDatalogger::log_one(const struct processing_thread_msg* const data)
+int FileDataLogger::log_one(const struct processing_thread_msg* const data)
 {
     if (!m_file_open)
         return -EIO;
@@ -189,7 +187,7 @@ int FileDatalogger::log_one(const struct processing_thread_msg* const data)
 
 void datalogger_thread(void) {
     const struct zbus_channel* chan;
-    FileDatalogger fdatalog;
+    FileDataLogger fdatalog;
     ConsoleDataLogger cdatalog;
 
     while(1) {
@@ -199,16 +197,16 @@ void datalogger_thread(void) {
             struct processing_thread_msg processed_data;
             zbus_chan_read(&processing_thread_chan,
                              &processed_data, K_MSEC(50));
-            cdatalog.log_one(&processed_data);
-            int rc = fdatalog.log_one(&processed_data);
+            cdatalog.log(&processed_data);
+            int rc = fdatalog.log(&processed_data);
             zbus_chan_pub(&end_onebeat_chan, &rc, K_MSEC(50));
         } else if (&start_measure_chan == chan) {
             auto timestamp_0 = k_uptime_get();
-            fdatalog.start_measurement(timestamp_0);
-            cdatalog.start_measurement(timestamp_0);
+            fdatalog.start(timestamp_0);
+            cdatalog.start(timestamp_0);
         } else if (&end_measure_chan == chan) {
-            fdatalog.stop_measurement();
-            cdatalog.stop_measurement();
+            fdatalog.stop();
+            cdatalog.stop();
         }
     }
 }
