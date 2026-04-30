@@ -32,11 +32,25 @@
 
 LOG_MODULE_REGISTER(datalogger_thread, CONFIG_LOG_DEFAULT_LEVEL);
 
-struct IDatalogger
+class IDatalogger
 {
+public:
+    IDatalogger():
+        m_timestamp_0(0)
+    {}
+
     template <typename Self>
     int start(this Self&& self, const int64_t& timestamp_0) {
-        return self.start_measurement(timestamp_0);
+        self.set_t0(timestamp_0);
+        return self.start_measurement();
+    }
+
+    void set_t0(const int64_t& timestamp_0) {
+        m_timestamp_0 = timestamp_0;
+    }
+
+    const int64_t& get_t0() {
+        return m_timestamp_0;
     }
 
     template <typename Self>
@@ -48,17 +62,19 @@ struct IDatalogger
     int log(this Self&& self, const struct processing_thread_msg* const data) {
         return self.log_one(data);
     }
+
+private:
+    int64_t m_timestamp_0;
+
 };
 
 
 class ConsoleDataLogger: public IDatalogger
 {
 public:
-    ConsoleDataLogger():
-        m_timestamp_0(0)
-    {}
-    int start_measurement(const int64_t& timestamp_0) {
-        m_timestamp_0 = timestamp_0;
+    ConsoleDataLogger() = default;
+
+    int start_measurement() {
         LOG_PRINTK("------ Start measurement ------\n");
         return 0;
     };
@@ -68,27 +84,22 @@ public:
     };
     int log_one(const struct processing_thread_msg* const data) {
         LOG_PRINTK("%lld,%d\n",
-                data->timestamp - m_timestamp_0,
+                data->timestamp - get_t0(),
                 data->value);
         return 0;
     }
-
-
-private:
-    int64_t m_timestamp_0;
 };
 
 class FileDataLogger: public IDatalogger
 {
 public:
     FileDataLogger():
-        m_file_open(false),
-        m_timestamp_0(0)
+        m_file_open(false)
     {}
 
     ~FileDataLogger();
 
-    int start_measurement(const int64_t& timestamp_0);
+    int start_measurement();
 
     int stop_measurement();
 
@@ -100,7 +111,6 @@ private:
     void write_header();
 
     bool m_file_open;
-    int64_t m_timestamp_0;
     struct fs_file_t m_file;
     char m_buf[128];
 };
@@ -111,10 +121,8 @@ FileDataLogger::~FileDataLogger()
     close_file();
 }
 
-int FileDataLogger::start_measurement(const int64_t& timestamp_0)
+int FileDataLogger::start_measurement()
 {
-    m_timestamp_0 = timestamp_0;
-
     if (!open_file()) 
         return -EIO;
     write_header();
@@ -173,7 +181,7 @@ int FileDataLogger::log_one(const struct processing_thread_msg* const data)
         return -EIO;
 
     sprintf(m_buf, "%lld,%d\n",
-            data->timestamp - m_timestamp_0,
+            data->timestamp - get_t0(),
             data->value);
     int ret = fs_write(&m_file, m_buf, strlen(m_buf));
     if (ret <0)
