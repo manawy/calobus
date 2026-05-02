@@ -5,15 +5,7 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stdbool.h>
 #include <zephyr/drivers/sensor.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-void get_current_fsr(struct sensor_value *val);
-#ifdef __cplusplus
-}
-#endif
+struct sensor_value get_sensor_current_fsr();
 

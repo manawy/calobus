@@ -5,9 +5,10 @@
 
 #include <zephyr/kernel.h>
 
-#include "measure/sensor.h"
+#include "measure/sensor.hpp"
 #include "zephyr/devicetree.h"
 #include "zbus_channels.h"
+#include "zephyr/zbus/zbus.h"
 
 #include <zephyr/logging/log.h>
 
@@ -44,21 +45,6 @@ static int adc_init(struct adc_sequence* sequence) {
     return 0;
 }
 #elif defined CONFIG_FLUXSENSOR
-static const struct device *fluxsensor = DEVICE_DT_GET(DT_ALIAS(fluxsensor));
-
-
-static int adc_init(const struct device* dev) {
-    if (!device_is_ready(dev)) {
-        LOG_ERR_DEVICE_NOT_READY(dev);
-        return -1;
-    }
-
-    struct sensor_value val;
-    sensor_value_from_float(&val, 2.048);
-    sensor_attr_set(fluxsensor, SENSOR_CHAN_VOLTAGE, SENSOR_ATTR_GAIN, &val);
-
-    return 0;
-}
 #endif
 
 
@@ -91,9 +77,6 @@ static bool adc_measure_heat(struct adc_sequence* sequence, int32_t* value) {
 #endif
 
 
-void get_current_fsr(struct sensor_value *val) {
-    sensor_attr_get(fluxsensor, SENSOR_CHAN_VOLTAGE, SENSOR_ATTR_GAIN, val);
-}
 
 // --- Thread definition
 
@@ -109,15 +92,73 @@ static void get_and_publish() {
         sdata.ok = ok;
         sdata.uv.val1 = value;
     #elif defined CONFIG_FLUXSENSOR
-        struct sensor_value sens_val;
-        sensor_sample_fetch(fluxsensor);
-        sensor_channel_get(fluxsensor, SENSOR_CHAN_VOLTAGE, &sens_val);
-        sdata.uv = sens_val;
-        sdata.ok = true;
     #endif
 
     zbus_chan_pub(&sensor_data_chan, &sdata, K_MSEC(100));
 
+}
+
+class FluxSensor
+{
+public:
+    FluxSensor() = default;
+
+    int init() ;
+
+    int get_and_publish(); 
+
+    void set_attr(const enum sensor_attribute attr, const struct sensor_value& val) {
+        sensor_attr_set(fluxsensor, SENSOR_CHAN_VOLTAGE, attr, &val);
+    }
+
+    struct sensor_value get_attr(const enum sensor_attribute attr) {
+        struct sensor_value val;
+        sensor_attr_get(fluxsensor, SENSOR_CHAN_VOLTAGE, attr, &val);
+        return val;
+    }
+
+    struct sensor_value get_fsr() {
+        return get_attr(SENSOR_ATTR_GAIN);
+    }
+
+private:
+    const struct device *fluxsensor = DEVICE_DT_GET(DT_ALIAS(fluxsensor));
+    struct sensor_value m_val;
+    struct sensor_data_msg m_pub;
+};
+
+int FluxSensor::init() 
+{
+    if (!device_is_ready(fluxsensor)) {
+        LOG_ERR_DEVICE_NOT_READY(fluxsensor);
+        return -EIO;
+    }
+    struct sensor_value val;
+    sensor_value_from_float(&val, 1.024);
+    sensor_attr_set(fluxsensor, SENSOR_CHAN_VOLTAGE, SENSOR_ATTR_GAIN, &val);
+    return 0;
+}
+
+int FluxSensor::get_and_publish() 
+{
+    int rc = sensor_sample_fetch(fluxsensor);
+    if (rc != 0) {
+        m_pub.ok = false;
+        LOG_ERR("Could not get reading from flux sensor");
+        zbus_chan_pub(&sensor_data_chan, &m_pub, K_MSEC(50));
+        return -1;
+    }
+    sensor_channel_get(fluxsensor, SENSOR_CHAN_VOLTAGE, &m_val);
+    m_pub.uv = m_val;
+    m_pub.ok = true;
+    return zbus_chan_pub(&sensor_data_chan, &m_pub, K_MSEC(50));
+
+}
+
+FluxSensor sensor;
+
+struct sensor_value get_sensor_current_fsr() {
+    return sensor.get_fsr();
 }
 
 void sensor_thread() {
@@ -135,22 +176,29 @@ void sensor_thread() {
         adc_init(&sequence);
     }
     #elif defined CONFIG_FLUXSENSOR
-    adc_init(fluxsensor);
+    FluxSensor sensor;
+    sensor.init();
     #endif
 
     while(1) {
         zbus_sub_wait(&sensor_thread_sub, &chan, K_FOREVER);
 
         if (&sensor_attr_chan == chan) {
+            #ifdef CONFIG_FLUXSENSOR
             struct sensor_attr_msg msg;
             zbus_chan_read(&sensor_data_chan, &msg, K_MSEC(10));
-            sensor_attr_set(fluxsensor, SENSOR_CHAN_VOLTAGE, msg.attr, &msg.val);
+            sensor.set_attr(msg.attr, msg.val);
+            #endif
             continue;
         } else if (&start_trigger_chan == chan) {
+            #ifdef CONFIG_FLUXSENSOR
+            sensor.get_and_publish();
+            #else
             get_and_publish();
+            #endif
             continue;
         } else {
-            LOG_ERR("Invalid channel !");
+            LOG_ERR("Invalid ZBUS channel !");
         }
     }
 }

@@ -22,7 +22,7 @@ set (APP_SOURCES
 
     src/measure/datalogger.cpp
     src/measure/processor.cpp
-    src/measure/sensor.c
+    src/measure/sensor.cpp
     src/measure/toggle.c
 
     src/interface/init.c

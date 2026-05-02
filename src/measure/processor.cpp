@@ -4,7 +4,7 @@
  */
 
 #include "zbus_channels.h"
-#include "measure/sensor.h"
+#include "measure/sensor.hpp"
 #include "zephyr/drivers/sensor.h"
 
 #include <stdint.h>
@@ -116,8 +116,7 @@ int Processor::pack_and_send()
 }
 
 void Processor::init_current_fsr() {
-    struct sensor_value val;
-    get_current_fsr(&val);
+    auto val = get_sensor_current_fsr();
     m_current_fsr = sensor_value_to_micro(&val);
 }
 
