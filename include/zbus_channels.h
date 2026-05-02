@@ -1,4 +1,30 @@
+/*
+ * Copyright (c) 2026 Fabien Georget <fabien.georget@usherbrooke.ca>
+ * SPDX-Licence-Identifier: Apache-2.0
+ */
+
+#pragma once
+
 #include <zephyr/zbus/zbus.h>
+#include <zephyr/drivers/sensor.h>
+
+struct processing_thread_msg {
+    bool to_save;
+    int32_t value;
+    int64_t timestamp;
+};
+//
+// The zbus message containing the raw data
+struct sensor_data_msg {
+    struct sensor_value uv;
+    bool ok;
+};
+
+// Zbus msg to set an attribute
+struct sensor_attr_msg {
+    enum sensor_attribute attr;
+    struct sensor_value val;
+};
 
 ZBUS_OBS_DECLARE(sensor_thread_sub);
 ZBUS_OBS_DECLARE(processing_thread_sub);

@@ -9,17 +9,11 @@
 #include <stdbool.h>
 #include <zephyr/drivers/sensor.h>
 
-// The zbus message containing the raw data
-struct sensor_data_msg {
-    struct sensor_value uv;
-    bool ok;
-};
-
-// Zbus msg to set an attribute
-struct sensor_attr_msg {
-    enum sensor_attribute attr;
-    struct sensor_value val;
-};
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 void get_current_fsr(struct sensor_value *val);
+#ifdef __cplusplus
+}
+#endif
 

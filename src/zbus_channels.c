@@ -4,9 +4,8 @@
  */
 #include <zephyr/zbus/zbus.h>
 
+#include "zbus_channels.h"
 #include "app_info.h"
-#include "measure/sensor.h"
-#include "measure/processor.h"
 #include "interface/leds.h"
 
 ZBUS_SUBSCRIBER_DEFINE(sensor_thread_sub, 4);

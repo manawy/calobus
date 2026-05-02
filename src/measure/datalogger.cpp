@@ -14,7 +14,6 @@
  * This thread is responsible for handling file creation, opening and closing
  */
 
-#include "measure/processor.h"
 #include "measure/toggle.h"
 #include "zbus_channels.h"
 #include "calo_time.h"

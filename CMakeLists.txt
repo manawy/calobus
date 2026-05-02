@@ -21,7 +21,7 @@ set (APP_SOURCES
     src/zbus_channels.c
 
     src/measure/datalogger.cpp
-    src/measure/processor.c
+    src/measure/processor.cpp
     src/measure/sensor.c
     src/measure/toggle.c
 
