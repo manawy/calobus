@@ -85,7 +85,7 @@ public:
     };
     int log_one(const struct processing_thread_msg* const data) {
         LOG_PRINTK("%lld,%d\n",
-                data->timestamp - get_t0(),
+                (data->timestamp - get_t0())/1000,
                 data->value);
         return 0;
     }
@@ -99,7 +99,8 @@ class FileDataLogger: public IDatalogger<FileDataLogger>
 {
 public:
     FileDataLogger():
-        m_file_open(false)
+        m_file_open(false),
+        m_cache_count(0)
     {}
 
     ~FileDataLogger();
@@ -118,6 +119,7 @@ private:
     bool m_file_open;
     struct fs_file_t m_file;
     char m_buf[128];
+    int m_cache_count;
 };
 
 
@@ -136,7 +138,7 @@ int FileDataLogger::start_measurement()
 
 void FileDataLogger::write_header()
 {
-    constexpr char buf[] = "# timestamp, voltage\n";
+    constexpr char buf[] = "# time (s), voltage (uV)\n";
     fs_write(&m_file, buf, strlen(buf));
 }
 
@@ -187,7 +189,7 @@ int FileDataLogger::log_one(const struct processing_thread_msg* const data)
         return -EIO;
 
     snprintf(m_buf, 128, "%lld,%d\n",
-        data->timestamp - get_t0(),
+        (data->timestamp - get_t0())/1000,
         data->value);
     int ret = fs_write(&m_file, &m_buf, strlen(m_buf));
 
@@ -196,6 +198,12 @@ int FileDataLogger::log_one(const struct processing_thread_msg* const data)
         LOG_ERR("failed to write to file");
         return -EIO;
     }
+
+    if (++m_cache_count >= CONFIG_NB_WRITE_FLUSH) {
+        fs_sync(&m_file);
+        m_cache_count = 0;
+    }
+
     return 0;
 }
 
