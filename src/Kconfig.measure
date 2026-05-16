@@ -4,13 +4,13 @@
 
 config HEARTBEAT_MSEC
     int "Measurement heartbeat in msec"
-    default 100
+    default 250
     help
         The default measurement period
 
 config OVERSAMPLING
     int "Number of samples to average"
-    default 10
+    default 4
     help
         The number of samples to average
 
