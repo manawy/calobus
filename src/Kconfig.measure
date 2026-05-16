@@ -4,13 +4,13 @@
 
 config HEARTBEAT_MSEC
     int "Measurement heartbeat in msec"
-    default 100
+    default 250
     help
         The default measurement period
 
 config OVERSAMPLING
     int "Number of samples to average"
-    default 10
+    default 4
     help
         The number of samples to average
 
@@ -20,3 +20,8 @@ config HEALTHCHECK_BEAT_SECONDS
     help
         The default health check period
 
+config NB_WRITE_FLUSH
+    int "Flush data to disk after x write"
+    default 25
+    help
+        File is sync after this number of write

@@ -16,14 +16,14 @@ set (APP_SOURCES
     src/main.cpp
 
     src/calo_time.c
-    src/filesystem.c
-    src/health_check.c
+    src/filesystem.cpp
+    src/health_check.cpp
     src/zbus_channels.c
 
-    src/measure/datalogger.c
-    src/measure/processor.c
-    src/measure/sensor.c
-    src/measure/toggle.c
+    src/measure/datalogger.cpp
+    src/measure/processor.cpp
+    src/measure/sensor.cpp
+    src/measure/toggle.cpp
 
     src/interface/init.c
     src/interface/leds.c
