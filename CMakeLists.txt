@@ -30,14 +30,23 @@ set (APP_SOURCES
 
 )
 
+macro(add_source file)
+    list(APPEND APP_SOURCES ${file})
+endmacro()
+
 macro(add_source_if_def config_option file)
     if(DEFINED ${config_option})
         list(APPEND APP_SOURCES ${file})
     endif()
 endmacro()
 
+# interface
 add_source_if_def(CONFIG_SHELL src/interface/shell.c)
 add_source_if_def(CONFIG_INPUT src/interface/input.c)
+
+# loggers
+add_source(src/measure/dataloggers/console_logger.cpp)
+add_source_if_def(CONFIG_SDLOGGING src/measure/dataloggers/file_logger.cpp)
 
 target_sources(app PRIVATE ${APP_SOURCES})
 
