@@ -1,6 +1,12 @@
 # Copyright (c) 2026 Fabien Georget
 # SPDX-License-Identifier: Apache-2.0
 
+config WAIT_CONSOLE_INIT
+    bool "Wait for console"
+    default false
+    help
+        If true, wait for console
+
 config SENSOR_THREAD_PRIORITY
     int "Sensor thread priority"
     default 3

@@ -11,6 +11,7 @@
 // -------------
 //
 void console_init() {
+    #ifdef CONFIG_WAIT_CONSOLE_INIT
     #if DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart)
         const struct device *const dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
         uint32_t dtr = 0;
@@ -21,6 +22,7 @@ void console_init() {
             /* Give CPU resources to low priority threads. */
             k_sleep(K_MSEC(100));
         }
+    #endif
     #endif
 }
 

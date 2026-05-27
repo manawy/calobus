@@ -21,7 +21,7 @@ int ConsoleDataLogger::stop_measurement() {
 }
 
 int ConsoleDataLogger::log_one(const struct processing_thread_msg* const data) {
-    LOG_PRINTK("%lld,%d\n",
+    LOG_PRINTK("Channel 1: %lld,%d\n",
             (data->timestamp - get_t0())/1000,
             data->value);
     return 0;
