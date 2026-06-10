@@ -21,6 +21,7 @@ int ledbusy_init() {
         LOG_ERR("led_busy not ready");
         return -1;
     }
+    gpio_pin_configure_dt(&led_busy, GPIO_OUTPUT_INACTIVE);
     return 0;
 }
 
@@ -29,6 +30,7 @@ int ledon_init() {
         LOG_ERR("ledok not ready");
         return -1;
     }
+    gpio_pin_configure_dt(&led_ok, GPIO_OUTPUT_INACTIVE);
     return 0;
 }
 
