@@ -8,6 +8,7 @@
 #include "app_info.h"
 #include "interface/leds.h"
 #include "measure/toggle.h"
+#include "measure/settings.h"
 
 ZBUS_SUBSCRIBER_DEFINE(sensor_thread_sub, 4);
 ZBUS_SUBSCRIBER_DEFINE(processing_thread_sub, 4);
@@ -46,6 +47,15 @@ ZBUS_CHAN_DEFINE(end_measure_chan,
                  NULL, NULL,
                  ZBUS_OBSERVERS(datalogger_thread_sub),
                  0);
+
+// -- Settings
+
+ZBUS_CHAN_DEFINE(measure_setting_chan,
+                 struct measure_setting_msg,
+                 NULL, NULL,
+                 ZBUS_OBSERVERS(processing_thread_sub),
+                 ZBUS_MSG_INIT(0)
+                 );
 
 // -- Measure sequence ---
 

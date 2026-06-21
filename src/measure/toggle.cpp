@@ -11,23 +11,22 @@
 
 LOG_MODULE_REGISTER(toggle, CONFIG_LOG_DEFAULT_LEVEL);
 
-constexpr k_timeout_t HEARTBEAT = K_MSEC(CONFIG_HEARTBEAT_MSEC);
-constexpr k_timeout_t zbus_timeout = K_MSEC(50);
+constexpr k_timeout_t ZBUS_TIMEOUT = K_MSEC(50);
 
 class MeasurementState
 {
 public:
     MeasurementState():
         measurement_ready(false),
-        measurement_on(false)
+        measurement_on(false),
+        m_heartbeat_duration_ms(CONFIG_HEARTBEAT_MSEC)
     {
-
         k_timer_init(&m_heartbeat, run_trigger, NULL);
     }
 
     static void run_trigger(struct k_timer*) {
         LOG_INF("Triggered !");
-        zbus_chan_notify(&start_trigger_chan, zbus_timeout);
+        zbus_chan_notify(&start_trigger_chan, ZBUS_TIMEOUT);
     }
 
     bool start_measurement();
@@ -51,11 +50,20 @@ public:
         measurement_ready = !measurement_ready;
     }
 
+    // Set the heartbeat duration
+    //
+    // If measurement ongoing, value will be set for next measurement
+    void set_heartbeat(int heartbeat);
+
+    int get_heartbeat() {
+        return m_heartbeat_duration_ms;
+    }
 
 private:
     bool measurement_ready;
     bool measurement_on;
     struct k_timer m_heartbeat;
+    int m_heartbeat_duration_ms;
 };
 
 
@@ -64,8 +72,8 @@ bool MeasurementState::start_measurement()
     if (!is_measurement_ready() || is_measurement_on()) {
         return false;
     }
-    zbus_chan_notify(&start_measure_chan, zbus_timeout);
-    k_timer_start(&m_heartbeat, HEARTBEAT, HEARTBEAT);
+    zbus_chan_notify(&start_measure_chan, ZBUS_TIMEOUT);
+    k_timer_start(&m_heartbeat, K_MSEC(m_heartbeat_duration_ms), K_MSEC(m_heartbeat_duration_ms));
     measurement_ready = false;
     measurement_on = true;
     return measurement_on;
@@ -77,9 +85,15 @@ bool MeasurementState::stop_measurement()
         return false;
     }
     k_timer_stop(&m_heartbeat);
-    zbus_chan_notify(&end_measure_chan, zbus_timeout);
+    zbus_chan_notify(&end_measure_chan, ZBUS_TIMEOUT);
     measurement_on = false;
     return measurement_on;
+}
+
+void MeasurementState::set_heartbeat(int heartbeat) {
+    if (is_measurement_on())
+        LOG_WRN("Measurement is ongoing, new heartbeat will be used for next measurement");
+    m_heartbeat_duration_ms = heartbeat;
 }
 
 // ---- API -------
@@ -102,6 +116,12 @@ bool is_measurement_ready() {
     return mst.is_measurement_ready();
 }
 void toggle_measurement_ready() {
-    return mst.toggle_measurement_ready();
+    mst.toggle_measurement_ready();
+}
+void set_measurement_interval(int heartbeat) {
+    mst.set_heartbeat(heartbeat);
 }
 
+int get_measurement_interval() {
+    return mst.get_heartbeat();
+}

@@ -6,6 +6,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <zephyr/sys/clock.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +34,14 @@ bool is_measurement_ready();
 void toggle_measurement_ready();
 /* Return true if measurement is on  */
 bool is_measurement_on();
+/* Set the measurement interval in ms ("heartbeat")
+ *
+ * If measurement ongoing, set for next duration
+ */
+void set_measurement_interval(int interval);
+/* Return the current measurement interval (in ms)
+ */
+int get_measurement_interval();
 
 #ifdef __cplusplus
 }

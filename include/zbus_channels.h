@@ -12,6 +12,7 @@
 extern "C" {
 #endif
 
+// The message type from sensor thread to processing thread
 struct processing_thread_msg {
     bool to_save;
     int32_t value;
@@ -33,6 +34,8 @@ struct sensor_attr_msg {
 ZBUS_OBS_DECLARE(sensor_thread_sub);
 ZBUS_OBS_DECLARE(processing_thread_sub);
 ZBUS_OBS_DECLARE(datalogger_thread_sub);
+
+ZBUS_CHAN_DECLARE(measure_setting_chan);
 
 ZBUS_CHAN_DECLARE(measurement_ready_chan);
 ZBUS_CHAN_DECLARE(measurement_busy_chan);
